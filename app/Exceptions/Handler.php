@@ -2,7 +2,13 @@
 
 namespace App\Exceptions;
 
+use Bmatovu\LaravelXml\Http\XmlResponse;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -37,5 +43,26 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    /**
+     * Manage exception render
+     * @param $request
+     * @param Throwable $e
+     * @return JsonResponse|XmlResponse|Response|RedirectResponse|SymfonyResponse
+     * @throws Throwable
+     */
+    public function render($request, Throwable $e)
+    {
+        if ($e instanceof QueryException) {
+            return response()->xml([
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+        return parent::render($request, $e);
     }
 }
